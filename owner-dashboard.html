@@ -249,7 +249,7 @@ body.dark .form-box input{
     let currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
     if(!currentUser || currentUser.role !== "owner"){
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     }
 
     document.getElementById("userDisplay").innerText = "👤 " + currentUser.username;
@@ -379,7 +379,7 @@ body.dark .form-box input{
 
     function logout(){
       localStorage.removeItem("currentUser");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     }
 
     function toggleMode(){
