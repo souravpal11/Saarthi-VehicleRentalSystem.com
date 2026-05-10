@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Vehicle Rental System</title>
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:linear-gradient(135deg,#43cea2,#185a9d);
+      padding:20px;
+    }
+
+    .box{
+      width:100%;
+      max-width:380px;
+      background:#fff;
+      padding:30px;
+      border-radius:18px;
+      box-shadow:0 12px 30px rgba(0,0,0,0.2);
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:8px;
+      color:#222;
+    }
+
+    .subtitle{
+      text-align:center;
+      color:#666;
+      margin-bottom:22px;
+      font-size:14px;
+    }
+
+    .input-group{
+      margin-bottom:15px;
+    }
+
+    .input-group label{
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+      font-weight:bold;
+      color:#333;
+    }
+
+    .input-group input,
+    .input-group select{
+      width:100%;
+      padding:12px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      outline:none;
+      font-size:15px;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus{
+      border-color:#185a9d;
+    }
+
+    #licenseGroup{
+      display:none;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      background:#185a9d;
+      color:#fff;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:16px;
+      font-weight:bold;
+      margin-top:8px;
+    }
+
+    button:hover{
+      background:#12457a;
+    }
+
+    p{
+      text-align:center;
+      margin-top:16px;
+      font-size:14px;
+      color:#555;
+    }
+
+    a{
+      color:#185a9d;
+      text-decoration:none;
+      font-weight:bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Register</h2>
+    <p class="subtitle">Create your vehicle rental account</p>
+
+    <div class="input-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="Enter username">
+    </div>
+
+    <div class="input-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter password">
+    </div>
+
+    <div class="input-group">
+      <label for="role">Role</label>
+      <select id="role" onchange="toggleLicenseField()">
+        <option value="">Select Role</option>
+        <option value="owner">Owner</option>
+        <option value="user">User</option>
+      </select>
+    </div>
+    <div class="input-group" id="ownerCodeGroup" style="display:none;">
+        <label for="ownerCode">Owner Verification Code</label>
+        <input type="text" id="ownerCode" placeholder="Enter 6-digit code">
+    </div>
+    <div class="input-group" id="licenseGroup">
+      <label for="license">Driving Licence Number</label>
+      <input type="text" id="license" placeholder="Enter licence number">
+    </div>
+
+    <button onclick="registerUser()">Register</button>
+
+    <p>Already have an account? <a href="login.html">Login</a></p>
+    <br>
+    <div id="message" style="text-align:center; margin-bottom:10px; font-weight:bold;"></div>
+  </div>
+
+
+  <script>
+    function toggleLicenseField(){
+  let role = document.getElementById("role").value;
+  let licenseGroup = document.getElementById("licenseGroup");
+  let ownerCodeGroup = document.getElementById("ownerCodeGroup");
+
+  if(role === "user"){
+    licenseGroup.style.display = "block";
+    ownerCodeGroup.style.display = "none";
+  } 
+  else if(role === "owner"){
+    licenseGroup.style.display = "none";
+    ownerCodeGroup.style.display = "block";
+  } 
+  else {
+    licenseGroup.style.display = "none";
+    ownerCodeGroup.style.display = "none";
+  }
+
+  
+}
+function showMessage(msg, color){
+  let messageDiv = document.getElementById("message");
+
+  if(!messageDiv){
+    alert(msg); // fallback (important)
+    return;
+  }
+
+  messageDiv.innerText = msg;
+  messageDiv.style.color = color;
+}
+
+    function registerUser(){
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value.trim();
+  let role = document.getElementById("role").value;
+  let license = document.getElementById("license").value.trim();
+  let ownerCode = document.getElementById("ownerCode").value.trim();
+
+  const SECRET_CODE = "111008"; // 🔒 your fixed owner code
+
+  if(username === "" || password === "" || role === ""){
+    showMessage("Please fill all fields", "red");
+    return;
+  }
+
+  if(role === "user" && license === ""){
+    showMessage("Please enter driving licence number", "red");
+    return;
+  }
+
+  // 🔥 Owner verification
+  if(role === "owner"){
+    if(ownerCode === ""){
+showMessage("Enter owner verification code", "red");
+      return;
+    }
+    if(ownerCode != SECRET_CODE){
+showMessage("Invalid owner verification code", "red");
+      return;
+    }
+  }
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  let exists = users.some(u => u.username === username);
+  if(exists){
+showMessage("Username already exists", "red");    return;
+  }
+
+  users.push({
+    username: username,
+    password: password,
+    role: role,
+    license: role === "user" ? license : ""
+  });
+
+  localStorage.setItem("users", JSON.stringify(users));
+  // button.innerHTML = "Registering...";
+  let btn = document.querySelector("button");
+btn.innerHTML = "Registering...";
+  // document.body.innerHTML = "<h2 style='color:white;text-align:center'>Registration Successful ✅</h2>";
+  showMessage("Registration successful ✅", "green");
+  setTimeout(() => {
+  window.location.href = "login.html";
+}, 1500);
+}
+
+ </script>
+</body>
+</html>

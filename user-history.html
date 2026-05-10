@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Booking History</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+    body{background:#f4f6f9;color:#222;padding:20px;transition:.3s;}
+    body.dark{background:#1e1e1e;color:#fff;}
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:20px;
+    }
+    .box{
+      background:#fff;
+      padding:20px;
+      border-radius:15px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    }
+    body.dark .box{background:#2c2c2c;color:#fff;}
+    button{
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      color:white;
+      padding:10px 14px;
+      font-weight:bold;
+      margin-left:8px;
+    }
+    .back-btn{background:#007bff;}
+    .mode-btn{background:#28a745;}
+    .history-item{
+      border-bottom:1px solid #ccc;
+      padding:12px 0;
+    }
+    .history-item:last-child{
+      border-bottom:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo" style="display: flex; justify-content: space-between; align-items: center;">
+    <img src="logoS.png" alt="Logo" style="height: 80px; width: 200px;margin-right: 10px;">
+    <h2>Booking History</h2>
+    </div>
+    <div>
+      <button class="back-btn" onclick="goBack()">Back</button>
+      <button class="mode-btn" onclick="toggleMode()">Dark/Light</button>
+    </div>
+  </div>
+
+  <div class="box" id="historyList"></div>
+  div class="contact" style="background-color: #000000; color: #fff; text-align: center; padding-top: 15px; height: 50px; ">
+    <p>@Saarthi-Vehicle Rental System | Contact Us - Phone No.-8119417520 Or Email ID - souravsir@gmail.com </p>
+
+  </div>
+
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if(!currentUser || currentUser.role !== "user"){
+      window.location.href = "login.html";
+    }
+
+    let history = JSON.parse(localStorage.getItem("history")) || [];
+    let userHistory = history.filter(item => item.username === currentUser.username);
+    let historyList = document.getElementById("historyList");
+
+    function renderHistory(){
+      if(userHistory.length === 0){
+        historyList.innerHTML = "<p>No booking history found.</p>";
+        return;
+      }
+
+      historyList.innerHTML = "";
+      userHistory.slice().reverse().forEach(item => {
+        historyList.innerHTML += `
+  <div class="history-item">
+    <p><strong>Vehicle:</strong> ${item.vehicleName}</p>
+    <p><strong>Type:</strong> ${item.vehicleType}</p>
+    <p><strong>Price:</strong> ₹${item.rentPrice}</p>
+    <p><strong>Action:</strong> ${item.action}</p>
+    <p><strong>Date:</strong> ${item.date}</p>
+    
+    <button onclick='downloadReceipt(${JSON.stringify(item)})' 
+      style="background:#6a0dad;margin-top:8px;">
+      Download Receipt
+    </button>
+  </div>
+`;
+      });
+    }
+
+    function goBack(){
+      window.location.href = "user-dashboard.html";
+    }
+
+    function toggleMode(){
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    if(localStorage.getItem("theme") === "dark"){
+      document.body.classList.add("dark");
+    }
+
+    renderHistory();
+    function downloadReceipt(item){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  
+  doc.setFontSize(20);
+  doc.setTextColor(40);
+  doc.text("RENTAL INVOICE", 105, 20, { align: "center" });
+
+
+  let img = new Image();
+  img.src = "logoS.png";
+
+  img.onload = function(){
+
+    doc.addImage(img, "PNG", 160, 10, 30, 20);
+
+   
+    doc.setFontSize(10);
+    doc.text("Vehicle Rental Service", 20, 15);
+    doc.text("India", 20, 20);
+
+   
+    doc.setLineWidth(0.5);
+    doc.line(20, 30, 190, 30);
+
+    
+    doc.setFontSize(11);
+    doc.text(`Invoice ID: ${item.id}`, 20, 40);
+    doc.text(`Date: ${item.date}`, 140, 40);
+
+    doc.setFontSize(12);
+    doc.text("BILL TO:", 20, 55);
+    doc.setFontSize(11);
+    doc.text(item.username, 20, 63);
+
+  
+    doc.setFillColor(230, 230, 230);
+    doc.rect(20, 75, 170, 10, "F");
+
+    doc.setFontSize(11);
+    doc.text("Vehicle", 25, 82);
+    doc.text("Type", 80, 82);
+    doc.text("Action", 120, 82);
+    doc.text("Amount", 160, 82);
+
+
+    doc.rect(20, 85, 170, 12);
+
+    doc.text(item.vehicleName, 25, 93);
+    doc.text(item.vehicleType, 80, 93);
+    doc.text(item.action, 120, 93);
+    doc.text(`Rs. ${item.rentPrice}`, 160, 93);
+
+    doc.setFontSize(12);
+    doc.text("Total:", 120, 115);
+    doc.text(`Rs. ${item.rentPrice}`, 160, 115);
+
+
+    doc.setFontSize(10);
+    doc.text("Thank you for choosing SAARTHI. Drive safe and visit again!", 105, 140, { align: "center" });
+
+   // ===== SAVE =====
+    doc.save(`Invoice_${item.vehicleName}.pdf`);
+  }
+}
+  </script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
